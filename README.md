@@ -146,15 +146,6 @@ Sequence өгөгдөл дээр урт хугацааны хамаарлыг с
 
 ##  Үр дүн ба харьцуулалт
 
-## Model Performance Comparison
-
-## Experimental Results
-
-### Classifier × Embedding Performance
-
-## Experimental Results
-
-### Classifier × Embedding Performance
 
 | Embedding / Feature                    | LogReg Acc | LogReg F1 | Random Forest | AdaBoost | LSTM (Test F1) |
 |---------------------------------------|------------|-----------|---------------|----------|---------------|
