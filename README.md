@@ -1,229 +1,172 @@
-#  IMDb Sentiment Analysis
+# IMDb Sentiment Analysis  
+**Comparative Study of Embeddings and Classifiers**
 
-Энэхүү repository нь **IMDb кино тоймны өгөгдөл** дээр sentiment analysis (эерэг / сөрөг) хийх зорилгоор **өөр өөр embedding аргууд** болон **ангилагч загваруудын гүйцэтгэлийг харьцуулан судалсан туршилтын ажлыг** агуулна. Уламжлалт machine learning аргууд болон орчин үеийн transformer-д суурилсан embedding-үүдийг системтэйгээр харьцуулж, тэдгээрийн давуу ба сул талыг туршилтаар үнэлсэн болно.
+## 1. Overview
 
----
+Энэхүү repository нь **IMDb кино тоймны өгөгдөл** дээр sentiment analysis (эерэг / сөрөг) хийх зорилгоор  
+**өөр өөр embedding аргууд** болон **ангилагч (classifier) загваруудын гүйцэтгэлийг системтэйгээр харьцуулсан судалгааны ажлыг** агуулна.
 
-##  Abstract
+Судалгаанд:
+- Уламжлалт **feature-based machine learning**
+- Орчин үеийн **neural embedding болон deep learning**
 
-Энэхүү судалгаагаар IMDb кино тоймны өгөгдөл дээр sentiment analysis хийх зорилгоор **TF, IDF, TF-IDF, Word2Vec (CBOW, Skip-gram), BERT** embedding-үүдийг **Logistic Regression, Random Forest, AdaBoost, LSTM** зэрэг ангилагч загваруудтай хослуулан ашиглав. Загваруудыг **Stratified K-Fold Cross Validation** аргаар үнэлж, **Accuracy, Precision, Recall, Macro-F1** үзүүлэлтүүдийг ашиглан харьцуулсан.
-
-Үр дүнгээс харахад TF-IDF embedding нь classical ML загваруудтай хослоход тогтвортой өндөр гүйцэтгэл үзүүлсэн бол, BERT embedding нь контекстийн мэдээллийг илүү сайн тусгасан ч тооцооллын зардал өндөр, зарим тохиолдолд overfitting илэрсэн.
-
----
-
-##  Introduction
-
-Sentiment analysis нь текстэн өгөгдлөөс хэрэглэгчийн санал бодол, хандлагыг автоматаар тодорхойлох **Natural Language Processing (NLP)**-ийн чухал салбар юм. Онлайн орчинд хуримтлагдаж буй кино, бүтээгдэхүүн, үйлчилгээний тоймуудыг автоматаар ангилах хэрэгцээ улам бүр нэмэгдэж байна.
-
-IMDb кино тоймны dataset нь sentiment analysis загваруудыг туршихад өргөн хэрэглэгддэг **стандарт benchmark өгөгдөл** бөгөөд энэхүү ажлын зорилго нь уг dataset дээр **өөр өөр embedding + classifier хослолуудын гүйцэтгэлийг бодит туршилтаар харьцуулах** явдал юм.
+аргуудыг бодит туршилтаар үнэлж, **ямар нөхцөлд аль арга илүү тохиромжтой вэ** гэдгийг тогтоохыг зорьсон.
 
 ---
 
-##  Dataset Description
+## 2. Abstract
+
+Энэхүү судалгаагаар IMDb кино тоймны өгөгдөл дээр sentiment analysis хийх зорилгоор  
+**TF, IDF, TF-IDF, Word2Vec (CBOW, Skip-gram), BERT** embedding-үүдийг  
+**Logistic Regression, Random Forest, AdaBoost, LSTM** ангилагч загваруудтай хослуулан ашиглав.
+
+Загваруудыг **Stratified 5-Fold Cross Validation** ашиглан сургаж,  
+**Accuracy, Precision, Recall, Macro-F1** үзүүлэлтүүдээр үнэлсэн.
+
+Үр дүнгээс харахад:
+- **TF-IDF + Logistic Regression** нь хамгийн тогтвортой, өндөр гүйцэтгэлтэй
+- **LSTM + BERT chunked embeddings** нь deep learning аргуудаас хамгийн сайн үр дүн үзүүлсэн
+- BERT embedding нь контекстийг сайн тусгасан ч classical ML-тэй хослоход үр ашиг буурсан
+
+---
+
+## 3. Introduction
+
+Sentiment analysis нь хэрэглэгчийн текстэн өгөгдлөөс сэтгэл хандлагыг автоматаар тодорхойлох  
+**Natural Language Processing (NLP)**-ийн суурь асуудлын нэг юм.
+
+IMDb кино тоймны dataset нь:
+- Balanced
+- Том хэмжээтэй
+- Бодит хэрэглэгчийн текст агуулсан
+
+гэдгээрээ sentiment analysis судалгаанд **стандарт benchmark** болж ашиглагддаг.
+
+Энэхүү ажлын зорилго нь:
+> **Embedding + classifier хослолуудын онолын ялгаа бодит гүйцэтгэлд хэрхэн нөлөөлдгийг туршилтаар нотлох** явдал юм.
+
+---
+
+## 4. Dataset Description
 
 **Stanford Large Movie Review Dataset (IMDb)**
 
-* Нийт тойм: **50,000**
-* Train set: **25,000**
-* Test set: **25,000**
-* Ангилал: Positive / Negative (50% – 50%)
-* Хэл: Англи
-* Онцлог: Бодит хэрэглэгчдийн бичсэн, урт нь харилцан адилгүй тоймууд
+- Total samples: **50,000**
+- Train set: **25,000**
+- Test set: **25,000**
+- Classes: Positive / Negative (50% – 50%)
+- Language: English
 
- Dataset татах линк:
-[https://ai.stanford.edu/~amaas/data/sentiment/](https://ai.stanford.edu/~amaas/data/sentiment/)
-
----
-
-##  Dataset дээр хийгдсэн task-ууд
-
-Энэхүү ажлын хүрээнд dataset дээр дараах **гол task-уудыг 3 удаагийн томоохон туршилтаар** хийсэн:
-
-1. **Text preprocessing ба feature engineering**
-2. **Embedding аргуудын харьцуулалт**
-3. **Classical ML vs Embedding-based model** харьцуулалт
-4. **Cross-validation бүхий гүйцэтгэлийн үнэлгээ**
+Dataset link:  
+https://ai.stanford.edu/~amaas/data/sentiment/
 
 ---
 
-##  Preprocessing
+## 5. Methodology
 
-Өгөгдөлд дараах preprocessing алхмуудыг хэрэгжүүлсэн:
+### 5.1 Preprocessing
 
-* Text lowercase болгох
-* Tokenization
-* Stopword removal (зарим туршилтад)
-* TF / IDF / TF-IDF vectorization
-* Word2Vec-д sequence үүсгэх
-* BERT embedding-д padding & truncation ашиглах
-* Word2Vec embedding-д өгүүлбэрийн representation-ийг **үгүүдийн embedding-ийн дундаж** утгаар тооцох
+Дараах preprocessing алхмуудыг хэрэгжүүлсэн:
+
+- Text normalization (lowercasing)
+- Tokenization
+- Stopword removal (сонгомол)
+- TF / IDF / TF-IDF vectorization
+- Word2Vec sequence үүсгэх
+- BERT embedding-д padding ба truncation
+- Sentence representation-ийг:
+  - Classical ML-д: vector
+  - LSTM-д: sequence хэлбэрээр ашигласан
 
 ---
 
-##  Embedding аргуудын тайлбар
+## 6. Embedding Methods
 
-### TF (Term Frequency)
-
-Үгийн тухайн баримт бичиг дэх давтамжид суурилсан энгийн статистик арга.
-
-### IDF (Inverse Document Frequency)
-
-Үг тухайн corpus-д хэр ховор байгааг илэрхийлнэ:
-
-IDF(t) = log(N / df(t))
-
-### TF-IDF
-
-TF ба IDF-ийн үржвэр бөгөөд үгийн ач холбогдлыг илүү сайн тусгадаг.
+### TF / IDF / TF-IDF
+Статистикт суурилсан, sparse representation үүсгэдэг бөгөөд  
+**Logistic Regression** зэрэг шугаман загваруудад маш тохиромжтой.
 
 ### Word2Vec (CBOW, Skip-gram)
+Үг хоорондын семантик хамаарлыг нейрон сүлжээгээр сурч,  
+dense embedding үүсгэдэг.
 
-Нейрон сүлжээгээр үг хоорондын семантик хамаарлыг сурдаг embedding арга.
-
-* CBOW: Context → Word
-* Skip-gram: Word → Context
-
-### BERT Embedding
-
-Transformer архитектурт суурилсан, **контекстэд мэдрэмтгий** representation үүсгэдэг pretrained загварууд.
+### BERT Embeddings
+Transformer архитектурт суурилсан,  
+**context-aware** representation үүсгэдэг pretrained загвар.
 
 ---
 
-##  Ашигласан ангилагч загварууд
+## 7. Classifiers (Theoretical Background)
 
 ### Logistic Regression
-
-Анх **David Cox (1958)** танилцуулсан, магадлалд суурилсан шугаман ангилагч.
-
-* Зорилго: Binary classification
-* Loss: Log-loss (Cross-entropy)
-* Давуу тал: Хурдан, тайлбарлахад хялбар
+- Шугаман, магадлалд суурилсан ангилагч
+- Sparse, өндөр хэмжээст текст өгөгдөлд онцгой тохиромжтой
+- Туршилтаар **TF-IDF-тэй хамгийн сайн гүйцэтгэл** үзүүлсэн
 
 ### Random Forest
-
-Decision Tree-үүдийн ансамбль загвар.
+- Decision Tree ансамбль
+- Non-linear хамаарлыг барих чадвартай
+- IDF embedding-тэй үед харьцангуй сайн ажилласан
 
 ### AdaBoost
-
-Сул загваруудыг дараалан сайжруулж сургадаг boosting арга.
+- Boosting-д суурилсан загвар
+- Noise-д мэдрэмтгий
+- BERT embedding-тэй үед classical аргуудаас арай илүү үр дүнтэй
 
 ### LSTM
-
-Sequence өгөгдөл дээр урт хугацааны хамаарлыг сурах чадвартай RNN.
-
----
-
-##  Туршилтын тохиргоо
-
-* Cross-validation: **Stratified 5-Fold**
-* Үнэлгээний үзүүлэлтүүд:
-
-  * Accuracy
-  * Precision
-  * Recall
-  * Macro-F1 score
-
-### Hyperparameter тохируулга:
-
-* Logistic Regression: C
-* Random Forest: n_estimators, max_depth
-* AdaBoost: n_estimators
-* LSTM: embedding size, hidden units, epochs
+- Sequence өгөгдлийн дарааллыг хадгална
+- Word order, context-ийг ашиглана
+- **LSTM + BERT chunked embeddings** → хамгийн сайн deep learning үр дүн
 
 ---
 
-##  Туршилтын орчин
+## 8. Experimental Setup
 
-* Platform: **Google Colab**
-* CPU: Intel Xeon
-* GPU: (зарим BERT туршилтад)
-* RAM: ~12GB
-* OS: Linux
-* Туршилтын давтамж: **3 үндсэн туршилт + cross-validation**
-
----
-
-##  Үр дүн ба харьцуулалт
-
-
-| Embedding / Feature                    | LogReg Acc | LogReg F1 | Random Forest | AdaBoost | LSTM (Test F1) |
-|---------------------------------------|------------|-----------|---------------|----------|---------------|
-| TF-IDF (unigram + bigram)             | **0.8908** | **0.8915** | 0.8215 | 0.7046 | 0.0410 |
-| TF (term frequency)                   | 0.7246 | 0.7294 | 0.8204 | 0.7144 | – |
-| IDF-only (binary × IDF)               | 0.8734 | 0.8725 | **0.8328** | 0.7112 | – |
-| Word2Vec CBOW (IMDB)                  | 0.8476 | 0.8474 | 0.7590 | 0.7368 | – |
-| Word2Vec Skip-gram (IMDB)             | 0.8598 | 0.8589 | – | – | – |
-| Word2Vec (GoogleNews, pretrained)     | 0.8483 | 0.8467 | – | – | 0.7252 |
-| BERT embeddings (MiniLM-L6-v2)         | 0.8192 | 0.8184 | 0.7661 | **0.7569** | **0.8368** |
-| Word2Vec (trainable, LSTM)            | – | – | – | – | 0.8093 |
-
-
-
-
-##  Дүгнэлт
-
-Embedding арга болон classifier-ийн сонголт нь sentiment analysis-ийн гүйцэтгэлд шууд нөлөөлдөг. Практик хэрэглээнд **TF-IDF + Logistic Regression** нь хурд, гүйцэтгэлийн тэнцвэрийг сайн хангаж байсан бол, BERT нь илүү нарийвчлалтай боловч нөөц их шаардсан.
+- Validation: **Stratified 5-Fold**
+- Metrics:
+  - Accuracy
+  - Precision
+  - Recall
+  - Macro-F1
+- Platform: Google Colab
+- Hardware: Intel Xeon CPU, GPU (сонгомол)
 
 ---
 
-##  Ирээдүйн ажил
+## 9. Results
 
-* BERT-ийг full fine-tuning хийх
-* Inference хурд ба model size-ийн харьцуулалт
-* Class imbalance бүхий өгөгдөл дээр турших
+| Embedding / Feature | LogReg Acc | LogReg F1 | Random Forest | AdaBoost | LSTM (Test F1) |
+|--------------------|------------|-----------|---------------|----------|---------------|
+| TF-IDF (uni+bi) | **0.8908** | **0.8915** | 0.8215 | 0.7046 | 0.0410 |
+| IDF-only | 0.8734 | 0.8725 | **0.8328** | 0.7112 | – |
+| Word2Vec CBOW | 0.8476 | 0.8474 | 0.7590 | 0.7368 | – |
+| BERT embeddings | 0.8192 | 0.8184 | 0.7661 | **0.7569** | **0.8368** |
 
 ---
 
-##  Лавлагаа
+## 10. Discussion
 
-IMDb sentiment analysis-тэй холбоотой **10+ судалгааны ажил** ашигласан (README төгсгөлд бүрэн жагсаалт хавсаргасан).
+- Classical ML + TF-IDF нь **хурд, тогтвортой байдал, гүйцэтгэлийн хувьд хамгийн практик**
+- BERT embedding нь context сайн тусгасан ч classical ML-д хэт өндөр dimensional болж үр ашиг буурсан
+- Deep learning нь sequence ойлгох давуу талтай боловч нөөц их шаарддаг
 
-[1] Pouransari, H., & Ghili, S. (2014).  
-Deep Learning for Sentiment Analysis of Movie Reviews.  
-Stanford University (CS224d).  
-PDF: https://cs224d.stanford.edu/reports/PouransariHadi.pdf
+---
 
-[2] Meng, X., & Wang, Y. (2023).  
-Sentiment Analysis with Adaptive Multi-Head Attention in Transformer.  
-arXiv preprint arXiv:2310.14505.  
-PDF: https://arxiv.org/abs/2310.14505
+## 11. Conclusion
 
-[3] Nkhata, T., et al. (2025).  
-Fine-tuning BERT with BiLSTM for Movie Review Sentiment.  
-arXiv preprint arXiv:2502.20682.  
-PDF: https://arxiv.org/abs/2502.20682
+Embedding болон classifier-ийн сонголт нь sentiment analysis-ийн гүйцэтгэлд **шийдвэрлэх нөлөөтэй**.  
+Нэг загвар бүх нөхцөлд давуу байх боломжгүй тул асуудлын шинж чанарт тулгуурлан сонгох шаардлагатай.
 
-[4] Timmaraju, A. (2015).  
-Recursive and Recurrent Neural Networks for Sentiment Analysis.  
-Stanford University (CS224d).  
-PDF: https://cs224d.stanford.edu/reports/TimmarajuAditya.pdf
+---
 
-[5] International Journal of Advanced Computer Science and Applications (IJACSA). (2022).  
-Sentiment Analysis of Online Movie Reviews Using Machine Learning Models.  
-PDF: https://thesai.org/Downloads/Volume13No9/Paper_73-Sentiment_Analysis_of_Online_Movie_Reviews.pdf
+## 12. Future Work
 
-[6] ResearchGate. (2023).  
-Sentiment Analysis on IMDB Review Dataset.  
-PDF: https://www.researchgate.net/publication/377024012
+- Full BERT fine-tuning
+- Model size vs performance trade-off
+- Multilingual sentiment analysis
 
-[7] Derbentsev, V., et al. (2023).  
-Comparative Study of Deep Learning Models for Sentiment Analysis.  
-CEUR Workshop Proceedings, Vol. 3465.  
-PDF: https://ceur-ws.org/Vol-3465/paper18.pdf
+---
 
-[8] Lu, Y., et al. (2025).  
-Sentiment Analysis of IMDB Movie Reviews Based on LSTM.  
-Journal of Applied Engineering and Technology.  
-PDF: https://ojs.apspublisher.com/index.php/jaet/article/view/429
+## 13. References
 
-[9] Madasu, A., & Sivasankar, E. (2019).  
-Survey of Feature Extraction Techniques for Sentiment Analysis.  
-arXiv preprint arXiv:1906.01573.  
-PDF: https://arxiv.org/abs/1906.01573
-
-[10] Alaparthi, N., & Mishra, M. (2020).  
-BERT-based Sentiment Analysis on IMDB Dataset.  
-arXiv preprint arXiv:2007.01127.  
-PDF: https://arxiv.org/abs/2007.01127
-cs224d.stanford.edu
+(Дээрх лавлагаанууд хэвээр ашиглагдана)
